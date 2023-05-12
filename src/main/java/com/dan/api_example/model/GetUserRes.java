@@ -15,4 +15,7 @@ public class GetUserRes {
         this.name = user.getName();
         this.age = user.getAge();
     }
+
+    public GetUserRes() {
+    }
 }
