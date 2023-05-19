@@ -1,14 +1,24 @@
 package com.dan.api_example.controller;
 
+import com.dan.api_example.common.exception.BaseException;
+import com.dan.api_example.common.response.BaseResponse;
 import com.dan.api_example.model.GetUserRes;
+import com.dan.api_example.model.LoginReq;
+import com.dan.api_example.model.LogoutReq;
 import com.dan.api_example.model.SignUpUserReq;
+import com.dan.api_example.repository.SessionRepository;
 import com.dan.api_example.service.UserService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Controller;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
 
+import javax.servlet.http.Cookie;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+import javax.servlet.http.HttpSession;
 import javax.validation.Valid;
 import java.util.List;
 import java.util.regex.Pattern;
@@ -23,52 +33,103 @@ public class UserController {
 
     /**
      * 회원가입 기능
-     *
-     ** BindingResult : 검증오류가 발생할 시 오류 내용을 보관하는 객체.
+     * <p>
+     * * BindingResult : 검증오류가 발생할 시 오류 내용을 보관하는 객체.
      *
      * @param signUpUserReq (name, age, email, password)
-     * @param result ()
+     * @param result        ()
      * @return
      */
     @PostMapping("/signup")
-    public String createUser(@RequestBody @Valid SignUpUserReq signUpUserReq, BindingResult result) {
+    public BaseResponse<String> createUser(@RequestBody @Valid SignUpUserReq signUpUserReq, BindingResult result) {
         if (result.hasErrors()) {
             String errorMessage = result.getFieldError().getDefaultMessage();// 에러의 메시지를 빼올 수 있음. (getFieldError() : 해당 필드의 에러 내용을 모두 빼옴. getDefaultMessage() : 에러 중 메시지를 빼옴.)
-            return errorMessage;
+            return new BaseResponse<>(false, HttpStatus.NOT_ACCEPTABLE.value(), errorMessage); //error 직접 생성.
         }
 
         try {
             userService.createUser(signUpUserReq);
-        } catch (Exception e) { //만약 UserService의 createUser()에서 에러가 말생하면 catch 구문 실행
-            return e.getMessage(); //에러 메시지를 반환.
+            return new BaseResponse<>("회원가입에 성공하였습니다.");
+        } catch (BaseException e) { //만약 UserService의 createUser()에서 에러가 말생하면 catch 구문 실행
+            return new BaseResponse<>(e.getStatus());
         }
-        return "ok";
     }
 
     /**
      * 회원 전부 조회하기 기능
+     *
      * @return
      */
     @GetMapping("/")
-    public List<GetUserRes> getUser() {
-        List<GetUserRes> getUserRes = userService.getUsers();
-        return getUserRes;
+    public BaseResponse<List<GetUserRes>> getUser() {
+        try {
+            List<GetUserRes> getUserRes = userService.getUsers();
+            return new BaseResponse<>(getUserRes);
+        } catch (BaseException e) {
+            return new BaseResponse<>(e.getStatus());
+        }
     }
 
     /**
      * 단일 유저 조회
      * case 1. UserService의 getUserById 메서드를 통해 GetUserRes 받아와서 반환.
      * case 2. 만약 UserService의 getUserById에서 예러 발생 시 null값 반환.
+     *
      * @RequestParam으로 userId 받아와서 조회
      */
     @GetMapping(value = "/", params = "userId")
-    public GetUserRes getUserById(@RequestParam Long userId) {
+    public BaseResponse<GetUserRes> getUserById(@RequestParam Long userId) {
         try {
             GetUserRes userRes = userService.getUserById(userId);
-            return userRes;
-        } catch (Exception e) {
-            log.info("Error Message = {}", e.getMessage()); // 지금 단계에서는 에러 내용을 콘솔 창에 띄우기만. todo: 에러 시 Client 에게 따로 보낼 Response를 만들 계획.
-            return null;
+            return new BaseResponse<>(userRes);
+        } catch (BaseException e) {
+            return new BaseResponse<>(e.getStatus());
         }
+    }
+
+    /**
+     * 세션을 활용한 로그인 기능.
+     * @param loginReq
+     * @param request
+     * @return
+     */
+    @PostMapping("/session-login")
+    public BaseResponse<String> sessionLogin(@RequestBody LoginReq loginReq, HttpServletRequest request, HttpServletResponse response) {
+        try {
+            userService.sessionLogin(loginReq, request, response);
+            return new BaseResponse<>("로그인에 성공하였습니다.");
+        } catch (BaseException e) {
+            return new BaseResponse<>(e.getStatus());
+        }
+    }
+
+    /**
+     * 세션 활용 로그아웃 기능
+     * @param request
+     * @return
+     */
+    @PostMapping("/session-logout")
+    public BaseResponse<String> sessionLogout(@RequestBody LogoutReq logoutReq,
+                                              HttpServletRequest request,
+                                              HttpServletResponse response) {
+        try {
+            userService.sessionLogout(logoutReq, request, response);
+            return new BaseResponse<>("성공적으로 로그아웃되었습니다.");
+        } catch (BaseException e) {
+            return new BaseResponse<>(e.getStatus());
+        }
+    }
+
+    /**
+     * 쿠키 만들어 보기.
+     * @param response
+     * @return
+     */
+    @RequestMapping("/set-cookie")
+    public String setCookies(HttpServletResponse response) {
+        Cookie cookie = new Cookie("DongchanCookie", "cookie-cookie");
+        cookie.setPath("/");
+        response.addCookie(cookie);
+        return "ok";
     }
 }
