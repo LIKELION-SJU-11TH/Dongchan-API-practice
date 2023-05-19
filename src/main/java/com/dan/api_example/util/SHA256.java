@@ -4,12 +4,11 @@ import lombok.extern.slf4j.Slf4j;
 
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
-import java.sql.SQLOutput;
 
 @Slf4j
 public class SHA256 {
 
-    public static String encrypt(String plainText) {
+    public static String encrypt(String plainText) throws RuntimeException {
         try {
             MessageDigest md = MessageDigest.getInstance("SHA-256"); // SHA-256이라는 알고리즘을 이용하기 위한 객체 생성.
 
