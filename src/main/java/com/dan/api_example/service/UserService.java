@@ -3,25 +3,27 @@ package com.dan.api_example.service;
 import com.dan.api_example.common.exception.BaseException;
 import com.dan.api_example.common.response.BaseResponseStatus;
 import com.dan.api_example.entity.User;
-import com.dan.api_example.model.GetUserRes;
-import com.dan.api_example.model.LoginReq;
-import com.dan.api_example.model.LogoutReq;
-import com.dan.api_example.model.SignUpUserReq;
+import com.dan.api_example.model.jwt.PostJwtRes;
+import com.dan.api_example.model.user.GetUserRes;
+import com.dan.api_example.model.user.LoginReq;
+import com.dan.api_example.model.user.LogoutReq;
+import com.dan.api_example.model.user.SignUpUserReq;
 import com.dan.api_example.repository.SessionRepository;
 import com.dan.api_example.repository.UserRepository;
+import com.dan.api_example.util.JwtUtils;
 import com.dan.api_example.util.SHA256;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Objects;
-import java.util.Optional;
-import java.util.stream.Collectors;
+import java.util.*;
+
+import static com.dan.api_example.common.response.BaseResponseStatus.NOT_MATCH_PASSWORD;
+import static com.dan.api_example.common.response.BaseResponseStatus.PASSWORD_ENCRYPTION_ERROR;
 
 @Service
 @Slf4j
@@ -29,7 +31,9 @@ import java.util.stream.Collectors;
 public class UserService {
 
     private final UserRepository userRepository;
+    private final JwtUtils jwtUtils;
     private final SessionRepository sessionRepository = SessionRepository.getInstance();
+
 
     /**
      * 유저 생성
@@ -178,5 +182,30 @@ public class UserService {
         } catch (Exception e) {
             throw new BaseException(BaseResponseStatus.REDIRECT_ERROR);
         }
+    }
+
+    public PostJwtRes login(LoginReq loginReq) {
+//        User user1 = userRepository
+//                      .findByEmail(loginReq.getEmail())
+//                      .orElseThrow(() -> new BaseException(BaseResponseStatus.NON_EXIST_USER));
+
+        Optional<User> opUser = userRepository.findByEmail(loginReq.getEmail());
+        User user = opUser.orElseThrow(() -> new BaseException(BaseResponseStatus.NON_EXIST_USER));
+        String encryptPwd;
+        try {
+            log.info("password : {}", loginReq.getPassword());
+            encryptPwd = SHA256.encrypt(loginReq.getPassword());
+        } catch (Exception exception) {
+            throw new BaseException(PASSWORD_ENCRYPTION_ERROR);
+        }
+        String role = user.getRole().toString();
+
+        if (Objects.equals(encryptPwd, user.getPassword())) {
+            Map<String, String> jwtTokens = jwtUtils.generateToken(user.getId(), role);
+            return new PostJwtRes(user.getId(), jwtTokens.get("accessToken"), jwtTokens.get("refreshToken"));
+        } else {
+            throw new BaseException(NOT_MATCH_PASSWORD);
+        }
+
     }
 }

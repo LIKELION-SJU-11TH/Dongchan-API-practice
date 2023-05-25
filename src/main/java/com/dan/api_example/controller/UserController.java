@@ -2,26 +2,23 @@ package com.dan.api_example.controller;
 
 import com.dan.api_example.common.exception.BaseException;
 import com.dan.api_example.common.response.BaseResponse;
-import com.dan.api_example.model.GetUserRes;
-import com.dan.api_example.model.LoginReq;
-import com.dan.api_example.model.LogoutReq;
-import com.dan.api_example.model.SignUpUserReq;
-import com.dan.api_example.repository.SessionRepository;
+import com.dan.api_example.model.jwt.PostJwtRes;
+import com.dan.api_example.model.user.GetUserRes;
+import com.dan.api_example.model.user.LoginReq;
+import com.dan.api_example.model.user.LogoutReq;
+import com.dan.api_example.model.user.SignUpUserReq;
 import com.dan.api_example.service.UserService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
-import org.springframework.stereotype.Controller;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
 
 import javax.servlet.http.Cookie;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
-import javax.servlet.http.HttpSession;
 import javax.validation.Valid;
 import java.util.List;
-import java.util.regex.Pattern;
 
 @RequiredArgsConstructor
 @RestController
@@ -79,6 +76,7 @@ public class UserController {
      */
     @GetMapping(value = "/", params = "userId")
     public BaseResponse<GetUserRes> getUserById(@RequestParam Long userId) {
+        log.info("GET USER BY ID CONTROLLER");
         try {
             GetUserRes userRes = userService.getUserById(userId);
             return new BaseResponse<>(userRes);
@@ -125,11 +123,26 @@ public class UserController {
      * @param response
      * @return
      */
-    @RequestMapping("/set-cookie")
+    @PostMapping("/set-cookie")
     public String setCookies(HttpServletResponse response) {
         Cookie cookie = new Cookie("DongchanCookie", "cookie-cookie");
         cookie.setPath("/");
         response.addCookie(cookie);
         return "ok";
+    }
+
+    @PostMapping("/login")
+    public BaseResponse<PostJwtRes> login(@RequestBody @Valid LoginReq loginReq, BindingResult result) {
+        if (result.hasErrors()) {
+            String errorMessage = result.getFieldError().getDefaultMessage();// 에러의 메시지를 빼올 수 있음. (getFieldError() : 해당 필드의 에러 내용을 모두 빼옴. getDefaultMessage() : 에러 중 메시지를 빼옴.)
+            return new BaseResponse<>(false, HttpStatus.NOT_ACCEPTABLE.value(), errorMessage); //error 직접 생성.
+        }
+
+        try {
+            PostJwtRes postJwtRes = userService.login(loginReq);
+            return new BaseResponse<>(postJwtRes);
+        } catch (BaseException e) {
+            return new BaseResponse<>(e.getStatus());
+        }
     }
 }
