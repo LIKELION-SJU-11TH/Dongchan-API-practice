@@ -31,6 +31,15 @@ public class User extends BaseEntity {
     @Column(name = "password", nullable = false)
     private String password;
 
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
+    private Role role = Role.ROLE_USER;
+
+    public enum Role {
+        ROLE_USER,
+        ROLE_ADMIN
+    }
+
     @Builder
     public User (Long id, String name, int age, String email, String password) {
         this.id = id;
