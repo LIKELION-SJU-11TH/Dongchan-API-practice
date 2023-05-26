@@ -2,45 +2,46 @@ package com.dan.api_example.util;
 
 import com.dan.api_example.common.exception.BaseException;
 import com.dan.api_example.common.response.BaseResponseStatus;
+import com.dan.api_example.entity.User;
+import com.dan.api_example.repository.UserRepository;
 import io.jsonwebtoken.*;
 import io.jsonwebtoken.io.Decoders;
 import io.jsonwebtoken.security.Keys;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.stereotype.Component;
 import org.springframework.web.context.request.RequestContextHolder;
 import org.springframework.web.context.request.ServletRequestAttributes;
 
 import javax.servlet.http.HttpServletRequest;
 import java.security.Key;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Objects;
+import java.util.*;
 
 @Component
 public class JwtUtils {
+
+    private final UserRepository userRepository;
 
     private static final long ACCESS_TOKEN_EXPIRE_TIME = 1000 * 60 * 30; // 30분
     private static final long REFRESH_TOKEN_EXPIRE_TIME = 1000 * 60 * 60 * 24 * 7; // 1주일
 
     private final Key key;
 
-    public JwtUtils(@Value("${jwt.secret}") String jwtSecret) {
+    public JwtUtils(@Value("${jwt.secret}") String jwtSecret, UserRepository userRepository) {
+        this.userRepository = userRepository;
         byte[] keyBytes = Decoders.BASE64.decode(jwtSecret);
         this.key = Keys.hmacShaKeyFor(keyBytes);
     }
 
     public Map<String, String> generateToken(Long userId, String role) {
-        int roleNo = 1;
-        if (Objects.equals(role, "ROLE_ADMIN")) {
-            roleNo = 99999;
-        }
 
         String accessToken = Jwts.builder()
                 .setHeaderParam("alg", "HS256")
                 .setHeaderParam("typ", "JWT")
                 .claim("uid", userId)
-                .claim("uAuth", roleNo)
                 .setExpiration(new Date(System.currentTimeMillis()+ACCESS_TOKEN_EXPIRE_TIME))
                 .signWith(key, SignatureAlgorithm.HS256)
                 .compact();
@@ -57,7 +58,7 @@ public class JwtUtils {
         return tokenInfo;
     }
 
-    public String getJwt() {
+    public String getJwtHeader() {
         HttpServletRequest request
                 = ((ServletRequestAttributes) RequestContextHolder
                 .currentRequestAttributes())
@@ -65,13 +66,16 @@ public class JwtUtils {
         return request.getHeader("X-ACCESS-TOKEN");
     }
 
-    public Long getUserId() throws BaseException{
-        String accessToken = getJwt();
+    public String getJwt() throws BaseException{
+        String accessToken = getJwtHeader();
 
         if (accessToken == null) {
             throw new BaseException(BaseResponseStatus.NO_JWT);
         }
+        return accessToken;
+    }
 
+    public Long getUserId(String accessToken) throws BaseException{
         try {
             Long userId = Jwts
                     .parserBuilder()
@@ -88,26 +92,10 @@ public class JwtUtils {
         }
     }
 
-    public int getRoleNo() throws BaseException{
-        String accessToken = getJwt();
-
-        if (accessToken == null) {
-            throw new BaseException(BaseResponseStatus.NO_JWT);
-        }
-
-        try {
-            int roleNo = Jwts
-                    .parserBuilder()
-                    .setSigningKey(key)
-                    .build()
-                    .parseClaimsJws(accessToken)
-                    .getBody()
-                    .get("uAuth", Integer.class);
-            return roleNo;
-        } catch (ExpiredJwtException expiredJwt) {
-            throw new BaseException(BaseResponseStatus.EXPIRED_TOKEN);
-        } catch (Exception e) {
-            throw new BaseException(BaseResponseStatus.INVALID_TOKEN);
-        }
+    public Authentication getAuthentication(String accessToken) throws BaseException {
+        User user = userRepository.findById(getUserId(accessToken)).orElseThrow(() -> new BaseException(BaseResponseStatus.NON_EXIST_USER));
+        List<GrantedAuthority> authorities = new ArrayList<>();
+        authorities.add(new SimpleGrantedAuthority(user.getRole().toString()));
+        return new UsernamePasswordAuthenticationToken(getUserId(accessToken), "", authorities);
     }
 }

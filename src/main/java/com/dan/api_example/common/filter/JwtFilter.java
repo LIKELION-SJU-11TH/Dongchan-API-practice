@@ -10,6 +10,7 @@ import com.dan.api_example.util.JwtUtils;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
@@ -61,24 +62,12 @@ public class JwtFilter extends OncePerRequestFilter {
         }
 
         try {
-            log.info("NEED TOKEN URI");
-            Long userId = jwtUtils.getUserId();// getUserId() 메서드 안에 NO_JWT, EXPIRED_TOKEN, INVALID_TOKEN exception 있음.
-            int roleNo = jwtUtils.getRoleNo();
-            log.info("USER ID : {}", userId);
+            String token = jwtUtils.getJwt();
 
-            if (roleNo == 99999) {
-                User user = userRepository.findById(userId).orElseThrow(() -> new BaseException(BaseResponseStatus.NON_EXIST_USER));
-                if (!Objects.equals(user.getRole(), User.Role.ROLE_ADMIN)) {
-                    throw new BaseException(BaseResponseStatus.NO_AUTH);
-                }
-            }
+            Authentication authentication = jwtUtils.getAuthentication(token);
+            SecurityContextHolder.getContext().setAuthentication(authentication);
+            filterChain.doFilter(request, response);
 
-            if (userId != null ) {
-                log.info("DO FILTER");
-                UsernamePasswordAuthenticationToken authenticationToken = new UsernamePasswordAuthenticationToken(userId, roleNo, null);
-                SecurityContextHolder.getContext().setAuthentication(authenticationToken);
-                filterChain.doFilter(request, response);
-            }
         } catch (BaseException e) {
             response.setCharacterEncoding("UTF-8");
             response.setContentType("application/json");
