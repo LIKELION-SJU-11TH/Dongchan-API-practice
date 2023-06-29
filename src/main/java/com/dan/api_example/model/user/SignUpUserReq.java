@@ -18,4 +18,14 @@ public class SignUpUserReq {
 
     @Pattern(regexp = "(?=.*[0-9])(?=.*[a-zA-Z])(?=.*\\W)(?=\\S+$).{8,16}", message = "비밀번호는 8~16자 영문 대 소문자, 숫자, 특수문자로 구성해주세요.")
     private String password;
+
+    public SignUpUserReq() {
+    }
+
+    public SignUpUserReq(String name, int age, String email, String password) {
+        this.name = name;
+        this.age = age;
+        this.email = email;
+        this.password = password;
+    }
 }
