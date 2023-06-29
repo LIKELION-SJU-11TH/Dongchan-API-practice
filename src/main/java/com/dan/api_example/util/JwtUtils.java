@@ -98,4 +98,9 @@ public class JwtUtils {
         authorities.add(new SimpleGrantedAuthority(user.getRole().toString()));
         return new UsernamePasswordAuthenticationToken(getUserId(accessToken), "", authorities);
     }
+
+    public Long getUserIdV2() {
+        String jwt = getJwt();
+        return getUserId(jwt);
+    }
 }
