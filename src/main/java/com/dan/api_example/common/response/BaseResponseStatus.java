@@ -22,12 +22,14 @@ public enum BaseResponseStatus {
     EXIST_EMAIL(false, HttpStatus.CONFLICT.value(), "이미 존재하는 회원입니다"),
     NON_EXIST_USER(false, HttpStatus.NOT_FOUND.value(), "존재하지 않는 회원입니다"),
     NON_EXIST_ARTICLE(false, HttpStatus.NOT_FOUND.value(), "존재하지 않는 게시글입니다."),
+    NON_EXIST_IMAGE(false, HttpStatus.NOT_FOUND.value(), "존재하지 않는 이미지입니다."),
     NOT_MATCH_PASSWORD(false, HttpStatus.UNAUTHORIZED.value(), "비밀번호가 일치하지 않습니다."),
     NO_SESSION_ID(false, HttpStatus.BAD_REQUEST.value(), "세션아이디가 존재하지 않습니다."),
     NO_JWT(false, HttpStatus.BAD_REQUEST.value(), "JWT 토큰이 존재하지 않습니다."),
     INVALID_TOKEN(false, HttpStatus.BAD_REQUEST.value(), "유효하지 않은 토큰입니다."),
     EXPIRED_TOKEN(false, HttpStatus.BAD_REQUEST.value(), "만료된 토큰입니다."),
     CONTENT_LENGTH_ERROR(false, HttpStatus.BAD_REQUEST.value(), "내용은 0자 이상 500자 이하까지 입력할 수 있습니다."),
+    EMPTY_MULTIPARTFILE(false, HttpStatus.NO_CONTENT.value(), "이미지가 비어있습니다."),
 
     /**
      * Server Error - 5xx 에러
