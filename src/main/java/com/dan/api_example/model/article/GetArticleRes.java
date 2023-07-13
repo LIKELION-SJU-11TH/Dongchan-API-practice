@@ -13,13 +13,15 @@ import java.time.LocalDateTime;
 @Setter
 @NoArgsConstructor
 public class GetArticleRes {
+    private Long boardId;
     private GetUserRes writer;
     private String title;
     private String content;
     private LocalDateTime createdAt;
 
     @Builder
-    public GetArticleRes(GetUserRes writer, String title, String content, LocalDateTime createdAt) {
+    public GetArticleRes(Long boardId, GetUserRes writer, String title, String content, LocalDateTime createdAt) {
+        this.boardId = boardId;
         this.writer = writer;
         this.title = title;
         this.content = content;

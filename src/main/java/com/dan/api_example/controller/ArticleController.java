@@ -6,6 +6,7 @@ import com.dan.api_example.model.article.GetArticleRes;
 import com.dan.api_example.model.article.GetArticleResWithImg;
 import com.dan.api_example.model.article.PostArticleReq;
 import com.dan.api_example.service.ArticleService;
+import com.dan.api_example.util.ApiExploreUtil;
 import com.dan.api_example.util.JwtUtils;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -14,6 +15,7 @@ import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.io.IOException;
 import java.util.List;
 
 @Slf4j
@@ -137,5 +139,11 @@ public class ArticleController {
         } catch (BaseException e) {
             return new BaseResponse<>(e.getStatus());
         }
+    }
+
+    @GetMapping("/api")
+    public void testAPI() throws IOException {
+        ApiExploreUtil apiExploreUtil = new ApiExploreUtil();
+        apiExploreUtil.getData(1, 10);
     }
 }
