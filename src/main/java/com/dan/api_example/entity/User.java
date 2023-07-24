@@ -35,9 +35,17 @@ public class User extends BaseEntity {
     @Column(nullable = false)
     private Role role = Role.ROLE_USER;
 
+    @Enumerated(EnumType.STRING)
+    private ProviderType providerType;
+
     public enum Role {
         ROLE_USER,
         ROLE_ADMIN
+    }
+
+    public enum ProviderType {
+        GOOGLE,
+        LOCAL
     }
 
     @Builder

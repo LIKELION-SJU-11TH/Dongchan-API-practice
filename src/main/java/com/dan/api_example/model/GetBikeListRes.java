@@ -1,30 +1,57 @@
 package com.dan.api_example.model;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
-import lombok.Getter;
-import lombok.Setter;
+import lombok.*;
+
+import java.util.List;
 
 @Getter
 @Setter
 public class GetBikeListRes {
-    private int rackTotCnt;
-    private String stationName;
-    private int parkingBikeTotCnt;
-    private int shared;
-    private float stationLatitude;
-    private float stationLongitude;
-    private String stationId;
-
-    public GetBikeListRes() {
+    @Getter
+    @Setter
+    @AllArgsConstructor
+    @NoArgsConstructor
+    @Builder
+    public static class GetBikeResList {
+        private List<RentBikeStatus> rentBikeStatus;
+        private List<GetBikeRes> row;
     }
 
-    public GetBikeListRes(int rackTotCnt, String stationName, int parkingBikeTotCnt, int shared, float stationLatitude, float stationLongitude, String stationId) {
-        this.rackTotCnt = rackTotCnt;
-        this.stationName = stationName;
-        this.parkingBikeTotCnt = parkingBikeTotCnt;
-        this.shared = shared;
-        this.stationLatitude = stationLatitude;
-        this.stationLongitude = stationLongitude;
-        this.stationId = stationId;
+    @Getter
+    @Setter
+    @AllArgsConstructor
+    @NoArgsConstructor
+    @Builder
+    public static class RentBikeStatus {
+        private int totalCount;
+        private List<ResResult> result;
     }
+
+    @Getter
+    @Setter
+    @AllArgsConstructor
+    @NoArgsConstructor
+    @Builder
+    public static class ResResult {
+        private String code;
+        private String resMessage;
+    }
+
+    @Getter
+    @Setter
+    @AllArgsConstructor
+    @NoArgsConstructor
+    @Builder
+    public static class GetBikeRes {
+        private int rackTotCnt;
+        private String stationName;
+        private int parkingBikeTotCnt;
+        private int shared;
+        private float stationLatitude;
+        private float stationLongitude;
+        private String stationId;
+    }
+
+
 }

@@ -32,6 +32,7 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
                 .antMatchers("/user/signup").permitAll() // 해당 URI에 대해 모든 접근 허용
                 .antMatchers("/user/session-login").permitAll()
                 .antMatchers("/user/login").permitAll()
+                .antMatchers("/login/*").permitAll()
                 .anyRequest().authenticated() // 나머지 요청에 대해 보안 검사.
                 .and()
                 .addFilterBefore(new JwtFilter(jwtUtils, userRepository), UsernamePasswordAuthenticationFilter.class);

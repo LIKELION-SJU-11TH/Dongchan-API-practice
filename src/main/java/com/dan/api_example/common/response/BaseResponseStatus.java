@@ -37,6 +37,7 @@ public enum BaseResponseStatus {
     DATABASE_INSERT_ERROR(false, HttpStatus.INTERNAL_SERVER_ERROR.value(), "데이터베이스 저장에 실패하였습니다."),
     PASSWORD_ENCRYPTION_ERROR(false, HttpStatus.INTERNAL_SERVER_ERROR.value(), "비밀번호 암호화에 실패하였습니다."),
     DATABASE_DELETE_ERROR(false, HttpStatus.INTERNAL_SERVER_ERROR.value(), "데이터베이스 삭제에 실패하였습니다."),
+    EXTERNAL_API_CONNECTION_ERROR(false, HttpStatus.GATEWAY_TIMEOUT.value(), "외부 API와의 연결이 끊어졌습니다."),
     REDIRECT_ERROR(false, HttpStatus.INTERNAL_SERVER_ERROR.value(), "리다이렉트에 실패하였습니다.");
 
     /**
